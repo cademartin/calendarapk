@@ -55,6 +55,27 @@ jobs:
         working-directory: android-app
         run: npx cap add android
 
+      # ── 7.5 Configure Android Permissions ──────────────────────────
+      - name: Configure Android permissions
+        run: |
+          python3 -c "
+          path = 'android-app/android/app/src/main/AndroidManifest.xml'
+          with open(path, 'r') as f: content = f.read()
+          permissions = '''
+              <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />
+              <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />
+              <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />
+          '''
+          if '<uses-permission' in content:
+              parts = content.split('<uses-permission', 1)
+              new_content = parts[0] + permissions.strip() + '\n    <uses-permission' + parts[1]
+          else:
+              parts = content.split('<application', 1)
+              new_content = parts[0] + permissions + '    <application' + parts[1]
+          with open(path, 'w') as f: f.write(new_content)
+          print('Successfully configured permissions in AndroidManifest.xml')
+          "
+
       # ── 8. Sync web assets (www/) into the Android project ─────────
       - name: Sync web assets to Android project
         working-directory: android-app
